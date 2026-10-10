@@ -4,7 +4,7 @@ require "ISUI/ISContextMenu"
 require "ISUI/ISWorldObjectContextMenu"
 require "ISUI/ISInventoryPaneContextMenu"
 require "ISUI/LootWindow/Handlers/CombinationWasherDryerToggle"
-require "BWM_WashCycle"
+require "BWM_WashCommon"
 
 local function patchHandler(handler, machineClass)
     local originalVisible = handler.shouldBeVisible
