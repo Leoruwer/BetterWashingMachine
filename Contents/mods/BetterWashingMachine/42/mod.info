@@ -1,0 +1,7 @@
+name=Better Washing Machine
+id=BWMachine
+description=Improved behaviour for the Washing Machine
+pzversion=42.21
+versionMin=42.21
+require=
+loadModAfter=
