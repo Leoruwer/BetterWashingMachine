@@ -28,14 +28,16 @@ local function patchHandler(handler, machineClass)
                 control.bwmWrapped = true
                 local originalPrerender = control.prerender
                 control.prerender = function(btn)
-                    originalPrerender(btn)
                     if BWM.isCycleActive(self.object) and self.container:isPowered() then
                         local alpha = btn.mouseOver and 0.8 or 0.6
                         btn:drawTextureScaled(getTexture("media/ui/CleanUI/Button/2_3Background.png"), 0, 0, btn.width, btn.height, alpha, 0.2, 0.6, 0.2)
+
                         btn:drawTextureScaled(getTexture("media/ui/CleanUI/Button/2_3Border.png"), 0, 0, btn.width, btn.height, 1, 0.4, 0.4, 0.4)
                         btn:drawTextureScaled(getTexture("media/ui/CleanUI/ICON/Icon_ON.png"), 0, 0, btn.width, btn.height, 1, 0.8, 0.8, 0.8)
                         control.tooltip = getText("ContextMenu_Turn_Off")
                         btn:updateTooltip()
+                    else
+                        originalPrerender(btn)
                     end
                 end
             end
