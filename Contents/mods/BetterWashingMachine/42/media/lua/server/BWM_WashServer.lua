@@ -120,6 +120,13 @@ local function clean(item, fraction, final, mode)
     return touched
 end
 
+-- Vanilla defines no ItemAfterCleaning for bundles; pairs confirmed by the stack_items recipe mapper.
+local BUNDLE_AFTER_CLEANING = {
+    ["Base.RippedSheetsDirtyBundle"] = "Base.RippedSheetsBundle",
+    ["Base.DenimStripsDirtyBundle"] = "Base.DenimStripsBundle",
+    ["Base.LeatherStripsDirtyBundle"] = "Base.LeatherStripsBundle",
+}
+
 local function process(object, cycle)
     local container = object:getContainer()
     local items = container:getItems()
@@ -134,11 +141,12 @@ local function process(object, cycle)
         elseif touched then
             sync(item)
             syncClientItem(object, index, item)
-            if cycle.mode == "washer" and remaining <= 1 then
-                local afterCleaning = item:getItemAfterCleaning()
-                if afterCleaning then
-                    replacements[#replacements + 1] = { item = item, itemType = afterCleaning }
-                end
+        end
+        -- Dirty bandages may carry no blood/dirt values, so replacement must not depend on "touched".
+        if cycle.mode == "washer" and remaining <= 1 then
+            local afterCleaning = item:getItemAfterCleaning() or BUNDLE_AFTER_CLEANING[item:getFullType()]
+            if afterCleaning then
+                replacements[#replacements + 1] = { item = item, itemType = afterCleaning }
             end
         end
     end
