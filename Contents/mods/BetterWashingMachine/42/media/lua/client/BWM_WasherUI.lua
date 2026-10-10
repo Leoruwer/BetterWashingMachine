@@ -6,7 +6,19 @@ require "ISUI/ISInventoryPaneContextMenu"
 require "ISUI/LootWindow/Handlers/CombinationWasherDryerToggle"
 require "BWM_WashCycle"
 
-local function patchHandler(handler)
+local function patchHandler(handler, machineClass)
+    local originalVisible = handler.shouldBeVisible
+    handler.shouldBeVisible = function(self)
+        if originalVisible(self) then return true end
+        local object = self.object
+        if not machineClass or not instanceof(object, machineClass) then return false end
+        if getCore():getGameMode() == "Tutorial" or not self.container or not self.container:isPowered() then
+            return false
+        end
+        local mode = BWM.getMachineMode(object)
+        return mode == "washer" and BWM.hasWater(object)
+    end
+
     local originalGetControl = handler.getControl
     handler.getControl = function(self)
         if BWM.isCycleActive(self.object) then
@@ -28,9 +40,9 @@ local function patchHandler(handler)
     end
 end
 
-patchHandler(ISLootWindowObjectControlHandler_ClothingWasherToggle)
+patchHandler(ISLootWindowObjectControlHandler_ClothingWasherToggle, "IsoClothingWasher")
 patchHandler(ISLootWindowObjectControlHandler_ClothingDryerToggle)
-patchHandler(ISLootWindowObjectControlHandler_CombinationWasherDryerToggle)
+patchHandler(ISLootWindowObjectControlHandler_CombinationWasherDryerToggle, "IsoCombinationWasherDryer")
 
 local function findMachineParam(option)
     for index = 1, 10 do

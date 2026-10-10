@@ -142,6 +142,18 @@ local function soakContainer(container)
     end
 end
 
+-- Fluid amount is 0 for some unlimited sources, so fall back to the object's own water checks.
+function BWM.hasWater(object)
+    if object:getFluidAmount() > 0 then return true end
+    for _, method in ipairs({ "hasWater", "hasFluid" }) do
+        if object[method] then
+            local ok, result = pcall(object[method], object)
+            if ok and result then return true end
+        end
+    end
+    return false
+end
+
 function BWM.startCycle(object, mode)
     mode = mode or "washer"
     local container = object:getContainer()
@@ -149,7 +161,7 @@ function BWM.startCycle(object, mode)
 
     local duration, water
     if mode == "washer" then
-        if object:getFluidAmount() <= 0 then return false end
+        if not BWM.hasWater(object) then return false end
         duration, water = BWM.getOptions()
         water = BWM.getWaterForLoad(container, water)
     else
@@ -267,8 +279,13 @@ local function tickCycle(object)
     if mode == "washer" then
         local step = cycle.water / cycle.duration
         if step > 0 then
-            if object:getFluidAmount() < step then return false end
-            object:useFluid(step)
+            local amount = object:getFluidAmount()
+            if amount > 0 then
+                if amount < step then return false end
+                object:useFluid(step)
+            elseif not BWM.hasWater(object) then
+                return false
+            end
         end
     end
 
