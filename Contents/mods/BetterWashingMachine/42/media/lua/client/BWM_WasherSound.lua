@@ -38,7 +38,6 @@ local function stopFinished(entry)
     pcall(function() entry.emitter:stopAll() end)
 end
 
--- The Finished FMOD event repeats on its own, so it is cut after a short time.
 local function onFinishedTick()
     local now = getTimestampMs()
     for i = #finishing, 1, -1 do
@@ -78,7 +77,6 @@ Events.OnServerCommand.Add(function(module, command, args)
     end
 end)
 
--- Resumes the loop after loading a save (single player / host, where the registry is local).
 local function reconcile()
     local registry = ModData.getOrCreate(REGISTRY_KEY)
     for _, entry in pairs(registry) do

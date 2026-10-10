@@ -5,3 +5,9 @@ option BWMachine.CycleDuration
 
 option BWMachine.WaterPerCycle
 {type = integer, min = 0, max = 600, default = 100, page = BWMachine, translation = BWMachine_WaterPerCycle,}
+
+option BWMachine.LowLoadWater
+{type = integer, min = 0, max = 100, default = 30, page = BWMachine, translation = BWMachine_LowLoadWater,}
+
+option BWMachine.MediumLoadWater
+{type = integer, min = 0, max = 100, default = 60, page = BWMachine, translation = BWMachine_MediumLoadWater,}

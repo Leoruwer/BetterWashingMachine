@@ -20,6 +20,32 @@ function BWM.getOptions()
     return clamp(math.floor(duration), 10, 120), clamp(water, 0, 600)
 end
 
+local LOAD_DEFAULTS = { LowLoadWater = 30, MediumLoadWater = 60 }
+local LOW_LOAD_LIMIT = 0.33
+local MEDIUM_LOAD_LIMIT = 0.66
+
+local function loadOption(name)
+    local vars = SandboxVars and SandboxVars.BWMachine or nil
+    local value = vars and tonumber(vars[name]) or LOAD_DEFAULTS[name]
+    return clamp(value, 0, 100)
+end
+
+-- Water for one cycle: the base amount scaled by how full the machine is.
+-- A load above the medium limit always uses the full base amount.
+function BWM.getWaterForLoad(container, baseWater)
+    local maxWeight = container:getCapacity()
+    local ratio = maxWeight > 0 and container:getCapacityWeight() / maxWeight or 0
+    local percent
+    if ratio <= LOW_LOAD_LIMIT then
+        percent = loadOption("LowLoadWater")
+    elseif ratio <= MEDIUM_LOAD_LIMIT then
+        percent = loadOption("MediumLoadWater")
+    else
+        percent = 100
+    end
+    return baseWater * percent / 100
+end
+
 function BWM.isWasherMode(object)
     if instanceof(object, "IsoCombinationWasherDryer") then
         return object:isModeWasher()
@@ -49,7 +75,6 @@ local function unregister(object)
     ModData.getOrCreate(REGISTRY_KEY)[key] = nil
 end
 
--- Sound is client-side: dedicated/host servers send a command, single player calls the client handler directly.
 local function notifySound(object, state)
     local square = object:getSquare()
     if not square then return end
@@ -74,6 +99,7 @@ function BWM.startCycle(object)
     if object:getFluidAmount() <= 0 then return false end
 
     local duration, water = BWM.getOptions()
+    water = BWM.getWaterForLoad(container, water)
     object:getModData()[CYCLE_KEY] = { elapsed = 0, duration = duration, water = water }
     register(object)
     object:transmitModData()
@@ -114,7 +140,6 @@ local function cleanItem(item, fraction, final)
         end
     end
 
-    -- Vanilla ISWashClothing also resets getBloodLevel() on every item, clothing included.
     local bloodLevel = item:getBloodLevel()
     if bloodLevel > 0 then
         item:setBloodLevel(final and 0 or bloodLevel * keep)
