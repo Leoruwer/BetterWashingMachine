@@ -47,19 +47,33 @@ local function findMachineParam(option)
     return nil
 end
 
+local function addTimeLeft(menu, machine)
+    local minutes = BWM.getMinutesLeft(machine)
+    if not minutes then return end
+    menu:addOption(getText("ContextMenu_BWM_MinutesLeft", minutes))
+    local options = menu.options
+    table.insert(options, 1, table.remove(options))
+    for index, option in ipairs(options) do option.id = index end
+end
+
 local function fixMenu(menu, turnOn, turnOff)
+    local activeMachine
     for _, option in ipairs(menu.options) do
         if option.name == turnOn then
             local machine = findMachineParam(option)
             if machine and BWM.isCycleActive(machine) then
                 option.name = turnOff
+                activeMachine = machine
             end
         end
+    end
+    for _, option in ipairs(menu.options) do
         if option.subOption then
             local subMenu = menu:getSubMenu(option.subOption)
             if subMenu then fixMenu(subMenu, turnOn, turnOff) end
         end
     end
+    if activeMachine then addTimeLeft(menu, activeMachine) end
 end
 
 Events.OnFillWorldObjectContextMenu.Add(function(player, context, worldobjects, test)

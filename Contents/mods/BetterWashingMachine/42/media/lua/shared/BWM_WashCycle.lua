@@ -75,6 +75,12 @@ function BWM.isCycleActive(object)
     return object:getModData()[CYCLE_KEY] ~= nil
 end
 
+function BWM.getMinutesLeft(object)
+    local cycle = object:getModData()[CYCLE_KEY]
+    if not cycle then return nil end
+    return math.max(1, cycle.duration - cycle.elapsed)
+end
+
 function BWM.getCycleMode(object)
     local cycle = object:getModData()[CYCLE_KEY]
     return cycle and (cycle.mode or "washer") or nil
@@ -269,6 +275,7 @@ local function tickCycle(object)
     local remaining = cycle.duration - cycle.elapsed
     processContainer(container, 1 / remaining, remaining <= 1, mode)
     cycle.elapsed = cycle.elapsed + 1
+    object:transmitModData()
     return cycle.elapsed < cycle.duration
 end
 
