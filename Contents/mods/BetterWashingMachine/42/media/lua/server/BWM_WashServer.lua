@@ -256,7 +256,7 @@ local function onToggle(player, args)
     if type(args) ~= "table" then return deny("bad args") end
     local object = BWM.resolveMachine(args.x, args.y, args.z, args.objectIndex)
     if not object then return deny("machine not found") end
-    if not BWM.managesToggle(object) then return deny("not in washer mode") end
+    if not BWM.managesToggle(object) then return deny("unsupported machine mode") end
     if not canInteract(player, object) then return deny("player too far") end
 
     local id = key(object)

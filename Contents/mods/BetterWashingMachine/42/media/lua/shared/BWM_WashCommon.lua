@@ -59,7 +59,8 @@ function BWM.isSupportedMachine(object)
 end
 
 function BWM.managesToggle(object)
-    return BWM.isSupportedMachine(object) and BWM.getMachineMode(object) == "washer"
+    local mode = BWM.isSupportedMachine(object) and BWM.getMachineMode(object)
+    return mode == "washer" or mode == "dryer"
 end
 
 function BWM.machineKey(x, y, z)
