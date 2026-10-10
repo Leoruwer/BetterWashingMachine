@@ -227,6 +227,13 @@ local function dryItem(item, fraction, final)
     return true
 end
 
+-- Vanilla defines no ItemAfterCleaning for bundles; pairs confirmed by the stack_items recipe mapper.
+local BUNDLE_AFTER_CLEANING = {
+    ["Base.RippedSheetsDirtyBundle"] = "Base.RippedSheetsBundle",
+    ["Base.DenimStripsDirtyBundle"] = "Base.DenimStripsBundle",
+    ["Base.LeatherStripsDirtyBundle"] = "Base.LeatherStripsBundle",
+}
+
 local function processContainer(container, fraction, final, mode)
     local items = container:getItems()
     local touchedItems = {}
@@ -240,7 +247,7 @@ local function processContainer(container, fraction, final, mode)
             touchedItems[#touchedItems + 1] = item
         end
         if mode == "washer" and final and ok then
-            local afterCleaning = item:getItemAfterCleaning()
+            local afterCleaning = item:getItemAfterCleaning() or BUNDLE_AFTER_CLEANING[item:getFullType()]
             if afterCleaning then
                 replacements[#replacements + 1] = { item = item, newType = afterCleaning }
             end
