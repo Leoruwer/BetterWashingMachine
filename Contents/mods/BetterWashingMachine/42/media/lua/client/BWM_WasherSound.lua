@@ -86,28 +86,55 @@ local function playFinished(x, y, z, mode)
     if not ok then print("[BWM][Sound] finished failed: " .. tostring(err)) end
 end
 
+-- Loops are driven by "desired" state (server events + registry), reconciled periodically,
+-- so lost/duplicated events can never leave a loop stuck or doubled.
+local desired = {}
+local HEAR_RANGE = 30
+local RECONCILE_MS = 1000
+local lastReconcile = 0
+
+local function setDesired(list)
+    desired = {}
+    for _, entry in pairs(list or {}) do
+        if type(entry) == "table" and entry.x then
+            desired[key(entry.x, entry.y, entry.z)] = { x = entry.x, y = entry.y, z = entry.z, mode = entry.mode }
+        end
+    end
+end
+
+local function reconcile()
+    local player = getPlayer()
+    for k, entry in pairs(desired) do
+        local near = player and player:getZ() == entry.z
+            and math.abs(player:getX() - entry.x) <= HEAR_RANGE and math.abs(player:getY() - entry.y) <= HEAR_RANGE
+        if near then startLoop(entry.x, entry.y, entry.z, entry.mode) else stopLoop(k) end
+    end
+    for k in pairs(playing) do
+        if not desired[k] then stopLoop(k) end
+    end
+end
+
+Events.OnTick.Add(function()
+    local now = getTimestampMs()
+    if now - lastReconcile < RECONCILE_MS then return end
+    lastReconcile = now
+    reconcile()
+end)
+
 function BWM.onSoundEvent(args)
     local k = key(args.x, args.y, args.z)
     if args.state == "start" then
-        startLoop(args.x, args.y, args.z, args.mode)
+        desired[k] = { x = args.x, y = args.y, z = args.z, mode = args.mode }
     else
+        desired[k] = nil
         stopLoop(k)
         if args.state == "finish" then playFinished(args.x, args.y, args.z, args.mode) end
     end
 end
 
--- Server-pushed list of active cycles (reconnect / late join). Client never mutates the registry.
-local function applySync(active)
-    local seen = {}
-    for _, entry in ipairs(active or {}) do
-        local k = key(entry.x, entry.y, entry.z)
-        seen[k] = true
-        startLoop(entry.x, entry.y, entry.z, entry.mode)
-    end
-    for k in pairs(playing) do
-        if not seen[k] then stopLoop(k) end
-    end
-end
+Events.OnReceiveGlobalModData.Add(function(moduleName, data)
+    if moduleName == BWM.REGISTRY_KEY and type(data) == "table" then setDesired(data) end
+end)
 
 Events.OnServerCommand.Add(function(module, command, args)
     if module ~= "BWM" then return end
@@ -116,10 +143,11 @@ Events.OnServerCommand.Add(function(module, command, args)
     elseif command == BWM.CMD_ITEM_SYNC then
         syncItem(args)
     elseif command == "sync" then
-        applySync(args.active)
+        setDesired(args.active)
     end
 end)
 
 Events.OnGameStart.Add(function()
+    ModData.request(BWM.REGISTRY_KEY)
     sendClientCommand(getPlayer(), "BWM", "requestSync", {})
 end)
