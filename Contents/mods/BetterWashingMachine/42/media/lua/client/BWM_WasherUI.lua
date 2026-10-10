@@ -29,9 +29,6 @@ end
 patchHandler(ISLootWindowObjectControlHandler_ClothingWasherToggle)
 patchHandler(ISLootWindowObjectControlHandler_CombinationWasherDryerToggle)
 
--- The world right-click menu entries for the washer are created by Java
--- (ISWorldObjectContextMenuLogic.createMenuEntries), which reads isActivated().
--- That runs before OnFillWorldObjectContextMenu, so the label is corrected afterwards.
 local function findWasherParam(option)
     for index = 1, 10 do
         local value = option["param" .. index]

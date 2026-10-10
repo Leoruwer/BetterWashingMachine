@@ -49,10 +49,23 @@ local function unregister(object)
     ModData.getOrCreate(REGISTRY_KEY)[key] = nil
 end
 
-function BWM.endCycle(object)
+-- Sound is client-side: dedicated/host servers send a command, single player calls the client handler directly.
+local function notifySound(object, state)
+    local square = object:getSquare()
+    if not square then return end
+    local args = { x = square:getX(), y = square:getY(), z = square:getZ(), state = state }
+    if isServer() then
+        sendServerCommand("BWM", "sound", args)
+    elseif BWM.onSoundEvent then
+        BWM.onSoundEvent(args)
+    end
+end
+
+function BWM.endCycle(object, finished)
     object:getModData()[CYCLE_KEY] = nil
     unregister(object)
     object:transmitModData()
+    notifySound(object, finished and "finish" or "stop")
 end
 
 function BWM.startCycle(object)
@@ -64,6 +77,7 @@ function BWM.startCycle(object)
     object:getModData()[CYCLE_KEY] = { elapsed = 0, duration = duration, water = water }
     register(object)
     object:transmitModData()
+    notifySound(object, "start")
     return true
 end
 
@@ -200,7 +214,8 @@ local function onEveryOneMinute()
                     keepGoing = false
                 end
                 if not keepGoing then
-                    BWM.endCycle(object)
+                    local cycle = object:getModData()[CYCLE_KEY]
+                    BWM.endCycle(object, ok and cycle and cycle.elapsed >= cycle.duration)
                 end
             end
         end
