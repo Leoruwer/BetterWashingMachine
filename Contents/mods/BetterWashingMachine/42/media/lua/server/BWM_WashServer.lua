@@ -1,9 +1,6 @@
 require "BWM_WashCommon"
 
--- Authoritative logic: runs in singleplayer, host and dedicated server, never on a pure client.
 if isClient() then return end
-
-print("[BWM][Server] Washer controller loaded")
 
 local function key(object)
     local square = object:getSquare()
@@ -56,8 +53,6 @@ local function endCycle(object, finished, reason)
     object:transmitModData()
     transmitRegistry()
     notify(object, cycle.mode, finished and "finish" or "stop")
-    print("[BWM][Server] Cycle " .. (finished and "finished" or "stopped")
-        .. " at " .. key(object) .. (reason and ": " .. reason or ""))
 end
 
 local function sync(item)
@@ -120,7 +115,6 @@ local function clean(item, fraction, final, mode)
     return touched
 end
 
--- Vanilla defines no ItemAfterCleaning for bundles; pairs confirmed by the stack_items recipe mapper.
 local BUNDLE_AFTER_CLEANING = {
     ["Base.RippedSheetsDirtyBundle"] = "Base.RippedSheetsBundle",
     ["Base.DenimStripsDirtyBundle"] = "Base.DenimStripsBundle",
@@ -142,7 +136,7 @@ local function process(object, cycle)
             sync(item)
             syncClientItem(object, index, item)
         end
-        -- Dirty bandages may carry no blood/dirt values, so replacement must not depend on "touched".
+
         if cycle.mode == "washer" and remaining <= 1 then
             local afterCleaning = item:getItemAfterCleaning() or BUNDLE_AFTER_CLEANING[item:getFullType()]
             if afterCleaning then
@@ -178,14 +172,12 @@ end
 local function startCycle(object)
     local mode, container = BWM.getMachineMode(object), object:getContainer()
     if not container or not container:isPowered() then
-        print("[BWM][Server] Cycle denied: machine is not powered")
         return
     end
     local duration, water = BWM.getOptions()
     if mode == "dryer" then
         duration, water = BWM.getDryingDuration(), 0
     elseif not BWM.hasWater(object) then
-        print("[BWM][Server] Cycle denied: machine has no water")
         return
     else
         water = BWM.getWaterForLoad(container, water)
@@ -199,8 +191,6 @@ local function startCycle(object)
     object:transmitModData()
     transmitRegistry()
     notify(object, mode, "start")
-    print("[BWM][Server] Cycle started at " .. key(object)
-        .. " mode=" .. mode .. " duration=" .. duration .. " water=" .. water)
 end
 
 Events.EveryOneMinute.Add(function()
@@ -236,10 +226,6 @@ Events.EveryOneMinute.Add(function()
                     endCycle(object, false, "insufficient water")
                 elseif not process(object, cycle) then
                     endCycle(object, true)
-                else
-                    print("[BWM][Server] Cycle tick at " .. registryKey
-                        .. " elapsed=" .. cycle.elapsed .. "/" .. cycle.duration
-                        .. " waterStep=" .. step)
                 end
             end
         end
@@ -258,7 +244,7 @@ local function canInteract(player, object)
     return dx * dx + dy * dy <= BWM.MAX_INTERACT_DISTANCE * BWM.MAX_INTERACT_DISTANCE
 end
 
-local function deny(reason) print("[BWM][Server] Toggle denied: " .. reason) end
+local function deny() end
 
 local function onToggle(player, args)
     if type(args) ~= "table" then return deny("bad args") end

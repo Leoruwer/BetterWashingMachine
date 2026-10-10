@@ -1,7 +1,6 @@
 require "BWM_WashCommon"
 require "BWM_WashToggle"
 
--- Client only requests the action; the server validates and runs the cycle.
 local function sendToggle(player, object)
     local square = object:getSquare()
     if not square then return end

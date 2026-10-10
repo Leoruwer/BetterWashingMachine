@@ -21,7 +21,6 @@ local function patchHandler(handler, machineClass)
 
     local originalGetControl = handler.getControl
     handler.getControl = function(self)
-        -- CleanUI replaces the text button with an icon button; redraw it as "on" instead of adding text.
         if handler.createIconControl then
             local control = originalGetControl(self)
             if control and not control.bwmWrapped then

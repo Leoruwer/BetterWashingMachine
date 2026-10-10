@@ -86,8 +86,6 @@ local function playFinished(x, y, z, mode)
     if not ok then print("[BWM][Sound] finished failed: " .. tostring(err)) end
 end
 
--- Loops are driven by "desired" state (server events + registry), reconciled periodically,
--- so lost/duplicated events can never leave a loop stuck or doubled.
 local desired = {}
 local HEAR_RANGE = 30
 local RECONCILE_MS = 1000
