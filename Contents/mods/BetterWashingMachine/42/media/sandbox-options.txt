@@ -3,6 +3,9 @@ VERSION = 1,
 option BWMachine.CycleDuration
 {type = integer, min = 10, max = 120, default = 40, page = BWMachine, translation = BWMachine_CycleDuration,}
 
+option BWMachine.DryingCycleDuration
+{type = integer, min = 10, max = 120, default = 40, page = BWMachine, translation = BWMachine_DryingCycleDuration,}
+
 option BWMachine.WaterPerCycle
 {type = integer, min = 0, max = 600, default = 100, page = BWMachine, translation = BWMachine_WaterPerCycle,}
 

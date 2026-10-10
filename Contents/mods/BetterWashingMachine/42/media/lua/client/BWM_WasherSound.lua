@@ -1,8 +1,6 @@
 BWM = BWM or {}
 
 local REGISTRY_KEY = "BWM_ActiveWashers"
-local RUNNING = "ClothingWasherRunning"
-local FINISHED = "ClothingWasherFinished"
 
 local playing = {}
 
@@ -18,12 +16,13 @@ local function stopLoop(k)
     playing[k] = nil
 end
 
-local function startLoop(x, y, z)
+local function startLoop(x, y, z, mode)
     local k = key(x, y, z)
     if playing[k] then return end
     local ok, err = pcall(function()
         local emitter = getWorld():getFreeEmitter(x + 0.5, y + 0.5, z)
-        local handle = emitter:playSoundLooped(RUNNING)
+        local sound = mode == "dryer" and "ClothingDryerRunning" or "ClothingWasherRunning"
+        local handle = emitter:playSoundLooped(sound)
         emitter:tick()
         playing[k] = { emitter = emitter, handle = handle }
     end)
@@ -50,10 +49,11 @@ local function onFinishedTick()
     if #finishing == 0 then Events.OnTick.Remove(onFinishedTick) end
 end
 
-local function playFinished(x, y, z)
+local function playFinished(x, y, z, mode)
     local ok, err = pcall(function()
         local emitter = getWorld():getFreeEmitter(x + 0.5, y + 0.5, z)
-        local handle = emitter:playSound(FINISHED)
+        local sound = mode == "dryer" and "ClothingDryerFinished" or "ClothingWasherFinished"
+        local handle = emitter:playSound(sound)
         emitter:tick()
         if #finishing == 0 then Events.OnTick.Add(onFinishedTick) end
         finishing[#finishing + 1] = { emitter = emitter, handle = handle, stopAt = getTimestampMs() + FINISHED_MAX_MS }
@@ -64,10 +64,10 @@ end
 function BWM.onSoundEvent(args)
     local k = key(args.x, args.y, args.z)
     if args.state == "start" then
-        startLoop(args.x, args.y, args.z)
+        startLoop(args.x, args.y, args.z, args.mode)
     else
         stopLoop(k)
-        if args.state == "finish" then playFinished(args.x, args.y, args.z) end
+        if args.state == "finish" then playFinished(args.x, args.y, args.z, args.mode) end
     end
 end
 
@@ -83,7 +83,7 @@ local function reconcile()
         local k = key(entry.x, entry.y, entry.z)
         local square = getCell():getGridSquare(entry.x, entry.y, entry.z)
         if square and not playing[k] then
-            startLoop(entry.x, entry.y, entry.z)
+            startLoop(entry.x, entry.y, entry.z, entry.mode)
         end
     end
     for k in pairs(playing) do

@@ -2,6 +2,8 @@
   "Sandbox_BWMachine": "Better Washing Machines",
   "Sandbox_BWMachine_CycleDuration": "Washing Cycle Duration (game minutes)",
   "Sandbox_BWMachine_CycleDuration_tooltip": "How long a washing machine cycle lasts, in game minutes.<br>Clothes are cleaned gradually and finish exactly at the end of the cycle.<br>A running cycle keeps the duration it started with.",
+  "Sandbox_BWMachine_DryingCycleDuration": "Drying Cycle Duration (game minutes)",
+  "Sandbox_BWMachine_DryingCycleDuration_tooltip": "How long a clothes dryer cycle lasts, in game minutes.<br>Clothing wetness decreases gradually and reaches zero at the end of the cycle.<br>A running cycle keeps the duration it started with.",
   "Sandbox_BWMachine_WaterPerCycle": "Water per Cycle",
   "Sandbox_BWMachine_WaterPerCycle_tooltip": "Total water taken from the machine's own water supply during one full cycle, in the same units shown by the machine's fluid amount.<br>It is spent evenly over the cycle. 0 makes washing free.<br>If the supply runs dry the cycle stops.<br>This is the amount for a full load (100%); lighter loads use the percentages below.",
   "Sandbox_BWMachine_LowLoadWater": "Water Use, Light Load (%)",
