@@ -1,5 +1,5 @@
 version=1
-id=
+id=3816876407
 title=Better Washing Machine
 description=[h1]Better Washing Machines[/h1]
 description=
@@ -33,5 +33,5 @@ description=[h2]Keeps the vanilla system[/h2]
 description=
 description=This is not a complete replacement for washing machines.
 description=The goal is to keep the original Project Zomboid laundry system and simply make it more consistent, configurable and practical.
-tags=Build 42
+tags=Build 42;Balance;Clothing/Armor;QoL
 visibility=public
