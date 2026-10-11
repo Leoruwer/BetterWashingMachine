@@ -36,9 +36,9 @@ end
 
 local function notify(object, mode, state)
     local square = object:getSquare()
-    sendServerCommand(BWM.MODULE, BWM.CMD_SOUND, {
-        x = square:getX(), y = square:getY(), z = square:getZ(), mode = mode, state = state,
-    })
+    local args = { x = square:getX(), y = square:getY(), z = square:getZ(), mode = mode, state = state }
+    if not isServer() and BWM.onSoundEvent then BWM.onSoundEvent(args) end
+    sendServerCommand(BWM.MODULE, BWM.CMD_SOUND, args)
 end
 
 local function transmitRegistry()
