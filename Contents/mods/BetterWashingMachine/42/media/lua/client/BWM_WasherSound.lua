@@ -146,6 +146,10 @@ Events.OnServerCommand.Add(function(module, command, args)
 end)
 
 Events.OnGameStart.Add(function()
-    ModData.request(BWM.REGISTRY_KEY)
+    if isClient() then
+        pcall(ModData.request, BWM.REGISTRY_KEY)
+    else
+        setDesired(ModData.getOrCreate(BWM.REGISTRY_KEY))
+    end
     sendClientCommand(getPlayer(), "BWM", "requestSync", {})
 end)
