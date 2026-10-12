@@ -36,7 +36,7 @@ end
 
 local function notify(object, mode, state)
     local square = object:getSquare()
-    local args = { x = square:getX(), y = square:getY(), z = square:getZ(), mode = mode, state = state }
+    local args = { x = square:getX(), y = square:getY(), z = square:getZ(), index = object:getObjectIndex(), mode = mode, state = state }
     if not isServer() and BWM.onSoundEvent then BWM.onSoundEvent(args) end
     sendServerCommand(BWM.MODULE, BWM.CMD_SOUND, args)
 end
@@ -258,7 +258,10 @@ local function onToggle(player, args)
     if lastToggle[id] and now - lastToggle[id] < BWM.TOGGLE_DEBOUNCE_MS then return deny("duplicate request") end
     lastToggle[id] = now
 
-    if BWM.isCycleActive(object) then
+    local active = BWM.isCycleActive(object)
+    if args.wantOn == true and active then return end
+    if args.wantOn == false and not active then return end
+    if active then
         endCycle(object, false, "toggle requested")
     else
         startCycle(object)
@@ -268,7 +271,7 @@ end
 local function onRequestSync(player)
     local list = {}
     for _, entry in pairs(ModData.getOrCreate(BWM.REGISTRY_KEY)) do
-        list[#list + 1] = { x = entry.x, y = entry.y, z = entry.z, mode = entry.mode }
+        list[#list + 1] = { x = entry.x, y = entry.y, z = entry.z, index = entry.index, mode = entry.mode }
     end
     sendServerCommand(player, BWM.MODULE, BWM.CMD_SYNC, { active = list })
 end

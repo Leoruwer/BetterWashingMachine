@@ -94,6 +94,7 @@ local function fixMenu(menu, turnOn, turnOff)
     for _, option in ipairs(menu.options) do
         if option.name == turnOn then
             local machine = findMachineParam(option)
+            if machine then BWM.recordMenuIntent(machine, not BWM.isCycleActive(machine)) end
             if machine and BWM.isCycleActive(machine) then
                 option.name = turnOff
                 activeMachine = machine

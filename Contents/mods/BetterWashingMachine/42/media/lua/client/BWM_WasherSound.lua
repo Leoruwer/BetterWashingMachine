@@ -90,12 +90,14 @@ local desired = {}
 local HEAR_RANGE = 30
 local RECONCILE_MS = 1000
 local lastReconcile = 0
+local WATCHDOG_GRACE_MS = 5000
+local receivedServerState = false
 
 local function setDesired(list)
     desired = {}
     for _, entry in pairs(list or {}) do
         if type(entry) == "table" and entry.x then
-            desired[key(entry.x, entry.y, entry.z)] = { x = entry.x, y = entry.y, z = entry.z, mode = entry.mode }
+            desired[key(entry.x, entry.y, entry.z)] = { since = getTimestampMs(), x = entry.x, y = entry.y, z = entry.z, index = entry.index, mode = entry.mode }
         end
     end
 end
@@ -110,6 +112,17 @@ local function reconcile()
     for k in pairs(playing) do
         if not desired[k] then stopLoop(k) end
     end
+    -- Watchdog: the machine's own ModData is the source of truth if an event was lost or reordered.
+    local now = getTimestampMs()
+    for k, entry in pairs(desired) do
+        if entry.index and now - (entry.since or 0) > WATCHDOG_GRACE_MS then
+            local object = BWM.resolveMachine(entry.x, entry.y, entry.z, entry.index)
+            if object and not BWM.isCycleActive(object) then
+                desired[k] = nil
+                stopLoop(k)
+            end
+        end
+    end
 end
 
 Events.OnTick.Add(function()
@@ -120,9 +133,10 @@ Events.OnTick.Add(function()
 end)
 
 function BWM.onSoundEvent(args)
+    receivedServerState = true
     local k = key(args.x, args.y, args.z)
     if args.state == "start" then
-        desired[k] = { x = args.x, y = args.y, z = args.z, mode = args.mode }
+        desired[k] = { x = args.x, y = args.y, z = args.z, index = args.index, mode = args.mode, since = getTimestampMs() }
     else
         desired[k] = nil
         stopLoop(k)
@@ -131,7 +145,8 @@ function BWM.onSoundEvent(args)
 end
 
 Events.OnReceiveGlobalModData.Add(function(moduleName, data)
-    if moduleName == BWM.REGISTRY_KEY and type(data) == "table" then setDesired(data) end
+    if moduleName ~= BWM.REGISTRY_KEY or type(data) ~= "table" then return end
+    if not receivedServerState or next(data) == nil then setDesired(data) end
 end)
 
 Events.OnServerCommand.Add(function(module, command, args)
@@ -141,6 +156,7 @@ Events.OnServerCommand.Add(function(module, command, args)
     elseif command == BWM.CMD_ITEM_SYNC then
         syncItem(args)
     elseif command == "sync" then
+        receivedServerState = true
         setDesired(args.active)
     end
 end)
