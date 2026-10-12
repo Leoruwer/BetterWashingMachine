@@ -146,7 +146,9 @@ end
 
 Events.OnReceiveGlobalModData.Add(function(moduleName, data)
     if moduleName ~= BWM.REGISTRY_KEY or type(data) ~= "table" then return end
-    if not receivedServerState or next(data) == nil then setDesired(data) end
+    local isEmpty = true
+    for _ in pairs(data) do isEmpty = false break end
+    if not receivedServerState or isEmpty then setDesired(data) end
 end)
 
 Events.OnServerCommand.Add(function(module, command, args)
